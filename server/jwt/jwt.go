@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"jojogo/server/config"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
