@@ -1,0 +1,4 @@
+api/*
+!api/src
+api/src/*
+!api/src/github.com
