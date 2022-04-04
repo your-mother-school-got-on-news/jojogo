@@ -1,13 +1,18 @@
 package main
 
 import (
+	"jojogo/server/config"
 	"jojogo/server/infra"
 	"net/http"
 	"time"
 )
 
-func main() {
+func load() {
+	config.Init()
+}
 
+func main() {
+	load()
 	infra.InitRouter()
 	s := &http.Server{
 		Addr:           ":8888",
