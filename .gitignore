@@ -1,9 +1,2 @@
-server/*
-!server/src
-!server/api
-server/api/pkg
-server/api/src
-server/src/*
-!server/src/github.com
-server/src/github.com/*
-!server/src/github.com/vansimke
+server/src
+server/pkg
