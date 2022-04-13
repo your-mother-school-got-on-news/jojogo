@@ -2,7 +2,6 @@ package main
 
 import (
 	"jojogo/server/infra"
-	"jojogo/server/utils/log"
 )
 
 // go run main.go
@@ -12,11 +11,6 @@ import (
 // curl localhost:8080/return?id=2 --request "PATCH"
 
 func main() {
-
-	log.Info("Connecting to database...")
-	infra.Connect()
-	log.Info("Connection to database established.")
-
 	infra.InitRouter()
 	infra.Router.Run()
 }

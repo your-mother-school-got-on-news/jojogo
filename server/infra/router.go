@@ -1,7 +1,7 @@
 package infra
 
 import (
-	"jojogo/server/api"
+	"jojogo/server/infra/api"
 
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -11,6 +11,8 @@ import (
 var Router = gin.Default()
 
 func InitRouter() {
+	api.Init()
+
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	Router.GET("/groups", api.GetGroups)
 	Router.GET("/books", api.GetBooks)
