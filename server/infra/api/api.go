@@ -3,10 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"jojogo/server/infra/api/db"
-	"jojogo/server/utils/log"
-
 	"fmt"
+	"jojogo/server/config"
+	"jojogo/server/infra/api/db"
+	"jojogo/server/jwt"
+	"jojogo/server/template"
+	"jojogo/server/utils/log"
+	"jojogo/server/utils/user"
 	"net/http"
 
 	"errors"
@@ -148,6 +151,47 @@ func CreateBook(c *gin.Context) {
 
 	books = append(books, newBook)
 	c.IndentedJSON(http.StatusCreated, newBook)
+}
+
+func LoginHandler(c *gin.Context) {
+	var request template.LoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Error("Bad Request, ", zap.String("error", "incorrect parameters"))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "incorrect parameters",
+		})
+		return
+	}
+	user, err := user.FindUserByUsername(request.UserName)
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": fmt.Sprintf("user %s not found", request.UserName),
+		})
+		return
+	}
+
+	if user.Password != request.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "incorrect password",
+		})
+		return
+	}
+
+	// // create jwt token
+	jwtToken, err := jwt.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// 測試domain先寫localhost secure先寫false
+	c.SetCookie(jwt.Key, jwtToken, config.Val.JWTTokenLife, "/", "localhost", false, true)
+	c.JSON(http.StatusOK, gin.H{
+		"token": jwtToken,
+	})
 }
 
 func Init() {
