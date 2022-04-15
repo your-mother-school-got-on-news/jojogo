@@ -17,10 +17,11 @@ func InitRouter() {
 
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	Router.GET("/group/view", api.GetGroups)
-	Router.GET("/group/update", api.UpdateGroup)
 	Router.GET("/group/get_by_name/:group_name", api.GetGroupByName)
 
 	Router.POST("/group/create/:group_name", api.CreateGroup)
+
+	Router.PATCH("/group/update/:search_name/:set_name", api.UpdateGroupName)
 
 	Router.GET("/books", api.GetBooks)
 	Router.GET("/books/:id", api.BookById)

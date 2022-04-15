@@ -130,16 +130,17 @@ func CreateGroup(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, insertion_response)
 }
 
-func UpdateGroup(c *gin.Context) {
-	// group_name := c.Param("group_name")
+func UpdateGroupName(c *gin.Context) {
+	set_name := c.Param("set_name")
+	search_name := c.Param("search_name")
 
 	coll := db.Client.Database("groups").Collection("version1")
 
 	models := []mongo.WriteModel{
-		mongo.NewReplaceOneModel().SetFilter(bson.D{{"title", "Record of a Shriveled Datum"}}).
-			SetReplacement(bson.D{{"title", "Dodging Greys"}, {"text", "When there're no matches, no longer need to panic. You can use upsert"}}),
-		mongo.NewUpdateOneModel().SetFilter(bson.D{{"title", "Dodging Greys"}}).
-			SetUpdate(bson.D{{"$set", bson.D{{"title", "Dodge The Greys"}}}}),
+		// mongo.NewReplaceOneModel().SetFilter(bson.D{{"title", "Record of a Shriveled Datum"}}).
+		// 	SetReplacement(bson.D{{"title", "Dodging Greys"}, {"text", "When there're no matches, no longer need to panic. You can use upsert"}}),
+		mongo.NewUpdateOneModel().SetFilter(bson.D{{"group_name", search_name}}).
+			SetUpdate(bson.D{{"$set", bson.D{{"group_name", set_name}}}}),
 	}
 	opts := options.BulkWrite().SetOrdered(true)
 	results, err := coll.BulkWrite(context.TODO(), models, opts)
@@ -151,14 +152,19 @@ func UpdateGroup(c *gin.Context) {
 		}
 	}
 
-	one_group := group{
-		Group_name:   strconv.FormatInt(results.ModifiedCount, 10),
-		Total_member: 3,
+	type update_response struct {
+		Affected string `json:"affcted"`
+		Message  string `json:"message"`
+	}
+
+	res := update_response{
+		Affected: strconv.FormatInt(results.ModifiedCount, 10),
+		Message:  "Succesful",
 	}
 
 	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, one_group)
+	c.IndentedJSON(http.StatusOK, res)
 }
 
 func BookById(c *gin.Context) {
