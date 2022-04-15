@@ -30,8 +30,7 @@ func GenerateToken(User template.User) (string, error) {
 	expireTime := nowTime.Add(time.Duration(config.Val.JWTTokenLife) * time.Second) // Token有效時間
 
 	claims := Claims{
-		UserID:       User.ID.Hex(),
-		UserPassword: User.Password,
+		UserID: User.ID.Hex(),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 			Subject:   User.Name,
