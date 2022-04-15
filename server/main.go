@@ -1,6 +1,7 @@
 package main
 
 import (
+	"jojogo/server/config"
 	"jojogo/server/infra"
 )
 
@@ -11,6 +12,7 @@ import (
 // curl localhost:8080/return?id=2 --request "PATCH"
 
 func main() {
+	config.Init()
 	infra.InitRouter()
 	infra.Router.Run()
 }

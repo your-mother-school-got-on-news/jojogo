@@ -14,7 +14,7 @@ import (
 var Client *mongo.Client
 
 func Connect() {
-	log.Info("successfully running")
+	log.Info("start to connet the db...")
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 	clientOptions := options.Client().
@@ -25,9 +25,10 @@ func Connect() {
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Error(fmt.Sprintf("%v", err))
+		panic(err)
 	}
 
 	Client = client
 
-	log.Info("successfully ending")
+	log.Info("successful!")
 }
