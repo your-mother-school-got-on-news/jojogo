@@ -157,41 +157,34 @@ func LoginHandler(c *gin.Context) {
 	var request template.LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Error("Bad Request, ", zap.String("error", "incorrect parameters"))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "incorrect parameters",
-		})
+		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
 		return
 	}
 	user, err := user.FindUserByUsername(request.UserName)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": fmt.Sprintf("user %s not found", request.UserName),
-		})
+		log.Error("Status Not Found, ", zap.String("error", fmt.Sprintf("user %s not found", request.UserName)))
+		template.StatusNotFound(c, template.ErrParamsCode, fmt.Sprintf("user %s not found", request.UserName))
 		return
 	}
 
 	if user.Password != request.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "incorrect password",
-		})
+		log.Error("Incorrect Password")
+		template.UnauthorityError(c, template.ErrUnauthorizedCode, "Incorrect Password")
 		return
 	}
 
 	// // create jwt token
 	jwtToken, err := jwt.GenerateToken(user)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": err.Error(),
-		})
+		log.Error("Cannot generate the Token", zap.Any("error", err))
+		template.UnauthorityError(c, template.ErrUnauthorizedCode, "Cannot generate the Token")
 		return
 	}
 
 	// 測試domain先寫localhost secure先寫false
 	c.SetCookie(jwt.Key, jwtToken, config.Val.JWTTokenLife, "/", "localhost", false, true)
-	c.JSON(http.StatusOK, gin.H{
-		"token": jwtToken,
-	})
+	template.Success(c, zap.Any("token", jwtToken))
 }
 
 func Init() {

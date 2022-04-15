@@ -4,7 +4,6 @@ import (
 	"jojogo/server/jwt"
 	"jojogo/server/template"
 	"jojogo/server/utils/log"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -15,13 +14,11 @@ import (
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 取得token
+		log.Info("Get in middleware auth")
 		token, ok := getToken(c)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"result":     false,
-				"error_code": template.ErrUnauthorizedCode,
-			})
 			log.Error("Auth: Unauthorized")
+			template.UnauthorityError(c, template.ErrUnauthorizedCode, "Auth: Unauthorized")
 			c.Abort()
 			return
 		}
@@ -29,10 +26,7 @@ func Auth() gin.HandlerFunc {
 		// 解析token 取得會員的資料
 		userID, userName, err := jwt.ParseToken(token)
 		if err != nil || userID == "" || userName == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"result":     false,
-				"error_code": template.ErrUnauthorizedCode,
-			})
+			template.UnauthorityError(c, template.ErrUnauthorizedCode, "jwt parse error")
 			log.Error("jwt parse error", zap.Any("Error", err))
 			c.Abort()
 			return
@@ -47,6 +41,7 @@ func Auth() gin.HandlerFunc {
 }
 
 func getToken(c *gin.Context) (string, bool) {
+	log.Info("Get Authorization Bearer token")
 	authValue := c.GetHeader("Authorization")
 	arr := strings.Split(authValue, " ")
 	if len(arr) != 2 {

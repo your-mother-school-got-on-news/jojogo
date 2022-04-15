@@ -23,14 +23,15 @@ func FindUserByUsername(username string) (template.User, error) {
 		if err == mongo.ErrNoDocuments {
 			// This error means your query did not match any documents.
 			log.Error("something went wrong(User Name)", zap.Error(err))
-			panic(err)
+			return user, err
 		}
 	}
 
 	bsonBytes, _ := bson.Marshal(result)
 	bson.Unmarshal(bsonBytes, &user)
 	if err != nil {
-		panic(err)
+		log.Error("bson unmarshal faied", zap.Error(err))
+		return user, err
 	}
 	log.Info("find user successfully, ", zap.Any("result", user))
 	return user, nil
@@ -44,6 +45,7 @@ func FindUserByID(userid string) (template.User, error) {
 	obj_id, err := primitive.ObjectIDFromHex(userid)
 	if err != nil {
 		log.Error("be failed from string to objectID", zap.Error(err))
+		return user, err
 	}
 	err = coll.FindOne(context.TODO(), bson.D{{"_id", obj_id}}).Decode(&result)
 	if err != nil {

@@ -48,3 +48,11 @@ func UnauthorityError(c *gin.Context, errorCode int, payload interface{}) {
 		"msg":        payload,
 	})
 }
+
+func StatusNotFound(c *gin.Context, errorCode int, payload interface{}) {
+	c.JSON(http.StatusNotFound, gin.H{
+		"result":     false,
+		"error_code": errorCode,
+		"msg":        payload,
+	})
+}
