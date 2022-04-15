@@ -10,13 +10,18 @@ import (
 	"jojogo/server/template"
 	"jojogo/server/utils/log"
 	"jojogo/server/utils/user"
+	"strconv"
+	"time"
+
 	"net/http"
 
 	"errors"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 )
 
@@ -37,27 +42,18 @@ func GetBooks(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, books)
 }
 
+type group struct {
+	Group_name   string `json:"group_name"`
+	Total_member int32  `json:"total_member"`
+	// Members      []string `json:"members"`
+	// Start_time string `json:"start_time"`
+	Active bool `json:"active"`
+}
+
 func GetGroups(c *gin.Context) {
 	coll := db.Client.Database("groups").Collection("version1")
-	var result bson.M // group_name The gay group
-	err := coll.FindOne(context.TODO(), bson.D{{"group_name", "gay group"}}).Decode(&result)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// This error means your query did not match any documents.
-			log.Error("something went wrong", zap.Error(err))
-			panic(err)
-		}
-	}
 
-	log.Info("result", zap.Any("result", result))
-
-	output, err := json.MarshalIndent(result, "", "    ")
-	if err != nil {
-		panic(err)
-	}
-	log.Info("output", zap.Any("output", output))
-
-	cursor, err := coll.Find(context.TODO(), bson.D{{"total_member", bson.D{{"$lte", 5}}}})
+	cursor, err := coll.Find(context.TODO(), bson.D{{"total_member", bson.D{{"$lte", 500}}}})
 	if err != nil {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
@@ -76,6 +72,93 @@ func GetGroups(c *gin.Context) {
 		}
 		log.Info(string(output))
 	}
+}
+
+func GetGroupByName(c *gin.Context) {
+	group_name := c.Param("group_name")
+
+	coll := db.Client.Database("groups").Collection("version1")
+	var result bson.M // group_name The gay group
+	err := coll.FindOne(context.TODO(), bson.D{{"group_name", group_name}}).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// This error means your query did not match any documents.
+			log.Error("something went wrong", zap.Error(err))
+			panic(err)
+		}
+	}
+
+	log.Info("result", zap.Any("result", result))
+
+	one_group := group{
+		Group_name:   result["group_name"].(string),  // result["group_name"],
+		Total_member: result["total_member"].(int32), // result["total_member"],
+		// Members:      result["members"].([]string),   // result["members"],
+		// Start_time: result["start_time"].(string), // result["start_time"],
+		Active: result["active"].(bool), // result["active"],
+	}
+
+	c.IndentedJSON(http.StatusOK, one_group)
+}
+
+type response struct {
+	ID      string `json:"id"`
+	Message string `json:"message"`
+}
+
+func CreateGroup(c *gin.Context) {
+	group_name := c.Param("group_name")
+
+	coll := db.Client.Database("groups").Collection("version1")
+	doc := bson.D{
+		{"group_name", group_name},
+		{"total_member", 0},
+		{"members", []string{}},
+		{"start_time", time.Now()},
+		{"active", true},
+	}
+	result, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		panic(err)
+	}
+
+	insertion_response := response{
+		ID:      result.InsertedID.(primitive.ObjectID).Hex(),
+		Message: "success",
+	}
+
+	c.IndentedJSON(http.StatusOK, insertion_response)
+}
+
+func UpdateGroup(c *gin.Context) {
+	// group_name := c.Param("group_name")
+
+	coll := db.Client.Database("groups").Collection("version1")
+
+	models := []mongo.WriteModel{
+		mongo.NewReplaceOneModel().SetFilter(bson.D{{"title", "Record of a Shriveled Datum"}}).
+			SetReplacement(bson.D{{"title", "Dodging Greys"}, {"text", "When there're no matches, no longer need to panic. You can use upsert"}}),
+		mongo.NewUpdateOneModel().SetFilter(bson.D{{"title", "Dodging Greys"}}).
+			SetUpdate(bson.D{{"$set", bson.D{{"title", "Dodge The Greys"}}}}),
+	}
+	opts := options.BulkWrite().SetOrdered(true)
+	results, err := coll.BulkWrite(context.TODO(), models, opts)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			// This error means your query did not match any documents.
+			log.Error("something went wrong", zap.Error(err))
+			panic(err)
+		}
+	}
+
+	one_group := group{
+		Group_name:   strconv.FormatInt(results.ModifiedCount, 10),
+		Total_member: 3,
+	}
+
+	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
+
+	c.IndentedJSON(http.StatusOK, one_group)
 }
 
 func BookById(c *gin.Context) {
