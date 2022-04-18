@@ -117,20 +117,12 @@ func UpdateGroupName(c *gin.Context) {
 
 	coll := db.Client.Database("groups").Collection("version1")
 
-	models := []mongo.WriteModel{
-		// mongo.NewReplaceOneModel().SetFilter(bson.D{{"title", "Record of a Shriveled Datum"}}).
-		// 	SetReplacement(bson.D{{"title", "Dodging Greys"}, {"text", "When there're no matches, no longer need to panic. You can use upsert"}}),
-		mongo.NewUpdateOneModel().SetFilter(bson.D{{"group_name", search_name}}).
-			SetUpdate(bson.D{{"$set", bson.D{{"group_name", set_name}}}}),
-	}
-	opts := options.BulkWrite().SetOrdered(true)
-	results, err := coll.BulkWrite(context.TODO(), models, opts)
+	// id, _ := primitive.ObjectIDFromHex("5eb3d668b31de5d588f42a7a")
+	filter := bson.D{{"group_name", search_name}}
+	update := bson.D{{"$set", bson.D{{"group_name", set_name}}}}
+	result, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// This error means your query did not match any documents.
-			log.Error("something went wrong", zap.Error(err))
-			panic(err)
-		}
+		panic(err)
 	}
 
 	type update_response struct {
@@ -139,35 +131,27 @@ func UpdateGroupName(c *gin.Context) {
 	}
 
 	res := update_response{
-		Affected: strconv.FormatInt(results.ModifiedCount, 10),
+		Affected: strconv.FormatInt(result.ModifiedCount, 10),
 		Message:  "Succesful",
 	}
 
-	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
+	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
 	c.IndentedJSON(http.StatusOK, res)
 }
 
 func AddToGroup(c *gin.Context) {
-	set_name := c.Param("set_name")
+	person_name := c.Param("person_name")
 	search_name := c.Param("search_name")
 
 	coll := db.Client.Database("groups").Collection("version1")
 
-	models := []mongo.WriteModel{
-		// mongo.NewReplaceOneModel().SetFilter(bson.D{{"title", "Record of a Shriveled Datum"}}).
-		// 	SetReplacement(bson.D{{"title", "Dodging Greys"}, {"text", "When there're no matches, no longer need to panic. You can use upsert"}}),
-		mongo.NewUpdateOneModel().SetFilter(bson.D{{"group_name", search_name}}).
-			SetUpdate(bson.D{{"$set", bson.D{{"group_name", set_name}}}}),
-	}
-	opts := options.BulkWrite().SetOrdered(true)
-	results, err := coll.BulkWrite(context.TODO(), models, opts)
+	// id, _ := primitive.ObjectIDFromHex("5eb3d668b31de5d588f42a7a")
+	filter := bson.D{{"group_name", search_name}}
+	update := bson.D{{"$push", bson.D{{"members", person_name}}}}
+	result, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			// This error means your query did not match any documents.
-			log.Error("something went wrong", zap.Error(err))
-			panic(err)
-		}
+		panic(err)
 	}
 
 	type update_response struct {
@@ -176,11 +160,11 @@ func AddToGroup(c *gin.Context) {
 	}
 
 	res := update_response{
-		Affected: strconv.FormatInt(results.ModifiedCount, 10),
+		Affected: strconv.FormatInt(result.ModifiedCount, 10),
 		Message:  "Succesful",
 	}
 
-	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
+	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
 	c.IndentedJSON(http.StatusOK, res)
 }

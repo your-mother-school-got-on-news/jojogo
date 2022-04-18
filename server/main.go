@@ -9,6 +9,7 @@ import (
 // curl localhost:8080/group/insert
 // curl localhost:8080/group/swimming
 // curl localhost:8080/group/create --request "POST"
+// curl localhost:8080/group/update/name/gay/new_gay --request "PATCH"
 // curl localhost:8080/group/update/state/gay/false --request "PATCH"
 
 func main() {
