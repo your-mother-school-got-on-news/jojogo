@@ -15,21 +15,19 @@ var Router = gin.Default()
 func InitRouter() {
 	api.Init()
 
-	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	Router.GET("/group/view", api.GetGroups)
-	Router.GET("/group/get_by_name/:group_name", api.GetGroupByName)
-
-	Router.POST("/group/create/:group_name", api.CreateGroup)
-
-	Router.PATCH("/group/update/:search_name/:set_name", api.UpdateGroupName)
-
-	Router.GET("/books", api.GetBooks)
-	Router.GET("/books/:id", api.BookById)
+	// login
 	Router.POST("/login", api.LoginHandler)
 	Router.GET("/info", middleware.Auth(), handler.GetUserInfo)
 
-	Router.POST("/books", api.CreateBook)
+	// group ops
+	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	Router.GET("/group/view", api.GetGroups)
+	Router.GET("/group/get/name/:group_name", api.GetGroupByName)
 
-	Router.PATCH("/checkout", api.CheckoutBook)
-	Router.PATCH("/return", api.ReturnBook)
+	Router.POST("/group/new/:group_name", api.CreateGroup)
+
+	Router.PATCH("/group/update/name/:search_name/:set_name", api.UpdateGroupName)
+	Router.PATCH("/group/update/person/add/:search_name/:person_name", api.AddToGroup)
+	Router.PATCH("/group/update/person/del/:search_name/:person_name", api.DelFromGroup)
+	Router.PATCH("/group/update/state/:search_name/:state", api.ChangeGroupState)
 }

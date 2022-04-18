@@ -6,13 +6,10 @@ import (
 )
 
 // go run main.go
-// curl localhost:8080/books
 // curl localhost:8080/group/insert
 // curl localhost:8080/group/swimming
 // curl localhost:8080/group/create --request "POST"
-// curl localhost:8080/books --include --header "Content-Type: application/json" -d @body.json --request "POST"
-// curl localhost:8080/checkout?id=2 --request "PATCH"
-// curl localhost:8080/return?id=2 --request "PATCH"
+// curl localhost:8080/group/update/state/gay/false --request "PATCH"
 
 func main() {
 	config.Init()
