@@ -1,11 +1,11 @@
 <template>
    <div class="login-card">
     <h1>Log-in</h1><br>
-  <form>
+  <el-form>
     <input type="text" name="user" placeholder="Username">
     <input type="password" name="pass" placeholder="Password">
     <input type="submit" name="login" class="login login-submit" value="login">
-  </form>
+  </el-form>
     
   <div class="login-help">
     <a href="#">Register</a> • <a href="#">Forgot Password</a>
@@ -15,15 +15,35 @@
 <!-- <div id="error"><img src="https://dl.dropboxusercontent.com/u/23299152/Delete-icon.png" /> Your caps-lock is on.</div> -->
 </template>
 
-<script>
-// @ is an alias to /src
 
+<script>
 export default {
   name: 'LoginView',
-  components: {
-
-  }
 }
+
+// import { useRouter } from 'vue-router'
+// const router = useRouter()
+// const login = async() => {
+//   return await userStore.LoginIn(loginFormData)
+// }
+// const submitForm = () => {
+//   loginForm.value.validate(async(v) => {
+//     if (v) {
+//       const flag = await login()
+//       if (!flag) {
+//         loginVerify()
+//       }
+//     } else {
+//       ElMessage({
+//         type: 'error',
+//         message: '請填寫正確的登入訊息',
+//         showClose: true,
+//       })
+//       loginVerify()
+//       return false
+//     }
+//   })
+// }
 </script>
 
 <style>
