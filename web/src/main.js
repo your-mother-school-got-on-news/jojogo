@@ -2,10 +2,10 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import installElementPlus from './plugins/element'
-
-const app = createApp(App)
-installElementPlus(app)
-app.use(store).use(router).mount('#app')
+import ElementPlus from 'element-plus'
+import en from 'element-plus/es/locale/lang/en'
+import { createPinia } from 'pinia'
+const app = createApp(App).use(createPinia())
+app.use(store).use(router).use(ElementPlus, { locale: en }).mount('#app')
 
 export default app
