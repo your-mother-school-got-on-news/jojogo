@@ -14,7 +14,7 @@ import (
 var Client *mongo.Client
 
 func Connect() {
-	log.Info("start to connet the db...")
+	log.Info("start connecting to database...")
 
 	serverAPIOptions := options.ServerAPI(options.ServerAPIVersion1)
 	clientOptions := options.Client().

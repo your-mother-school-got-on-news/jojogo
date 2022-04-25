@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"jojogo/server/config"
 	"jojogo/server/infra/api/db"
@@ -10,6 +9,7 @@ import (
 	"jojogo/server/template"
 	"jojogo/server/utils/log"
 	"jojogo/server/utils/user"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -45,14 +45,43 @@ func GetGroups(c *gin.Context) {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
 	}
+	fmt.Println("results = ", reflect.TypeOf(results))
+	fmt.Println("len of results = ", len(results))
+	// fmt.Println("results = ", reflect.TypeOf(results))
+	// groups := []group{}
+	var groups []group
 	for _, result := range results {
-		output, err := json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			log.Error("something went wrong", zap.Error(err))
-			panic(err)
+		// fmt.Println("result = ", reflect.TypeOf(result))
+		// output, err := json.MarshalIndent(result, "", "    ")
+		// fmt.Println("output = ", reflect.TypeOf(output))
+		// if err != nil {
+		// 	log.Error("something went wrong", zap.Error(err))
+		// 	panic(err)
+		// }
+		// log.Info(string(output))
+
+		one_group := group{
+			Group_name:   result["group_name"].(string),  // result["group_name"],
+			Total_member: result["total_member"].(int32), // result["total_member"],
+			// Members:      result["members"].([]string),   // result["members"],
+			// Start_time: result["start_time"].(string), // result["start_time"],
+			Active: result["active"].(bool), // result["active"],
 		}
-		log.Info(string(output))
+		groups = append(groups, one_group)
 	}
+
+	// fmt.Println(results)
+
+	// c.IndentedJSON(http.StatusOK, results)
+	c.IndentedJSON(http.StatusOK, groups)
+
+	// one_group := group{
+	// 	Group_name:   result["group_name"].(string),  // result["group_name"],
+	// 	Total_member: result["total_member"].(int32), // result["total_member"],
+	// 	// Members:      result["members"].([]string),   // result["members"],
+	// 	// Start_time: result["start_time"].(string), // result["start_time"],
+	// 	Active: result["active"].(bool), // result["active"],
+	// }
 }
 
 func GetGroupByName(c *gin.Context) {
