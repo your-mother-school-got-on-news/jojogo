@@ -24,9 +24,9 @@ import (
 )
 
 type group struct {
-	Group_name   string `json:"group_name"`
-	Total_member int32  `json:"total_member"`
-	// Members      []string `json:"members"`
+	Group_name   string      `json:"group_name"`
+	Total_member int32       `json:"total_member"`
+	Members      primitive.A `json:"members"`
 	// Start_time string `json:"start_time"`
 	Active bool `json:"active"`
 }
@@ -60,12 +60,15 @@ func GetGroups(c *gin.Context) {
 		// }
 		// log.Info(string(output))
 
+		fmt.Println("result['members'] = ", reflect.TypeOf(result["members"]))
+		fmt.Println("result['total_member'] = ", reflect.TypeOf(result["total_member"]))
+
 		one_group := group{
-			Group_name:   result["group_name"].(string),  // result["group_name"],
-			Total_member: result["total_member"].(int32), // result["total_member"],
-			// Members:      result["members"].([]string),   // result["members"],
-			// Start_time: result["start_time"].(string), // result["start_time"],
-			Active: result["active"].(bool), // result["active"],
+			Group_name:   result["group_name"].(string),
+			Total_member: result["total_member"].(int32),
+			Members:      result["members"].(primitive.A),
+			// Start_time: result["start_time"].(string),
+			Active: result["active"].(bool),
 		}
 		groups = append(groups, one_group)
 	}
@@ -101,11 +104,11 @@ func GetGroupByName(c *gin.Context) {
 	log.Info("result", zap.Any("result", result))
 
 	one_group := group{
-		Group_name:   result["group_name"].(string),  // result["group_name"],
-		Total_member: result["total_member"].(int32), // result["total_member"],
-		// Members:      result["members"].([]string),   // result["members"],
-		// Start_time: result["start_time"].(string), // result["start_time"],
-		Active: result["active"].(bool), // result["active"],
+		Group_name:   result["group_name"].(string),
+		Total_member: result["total_member"].(int32),
+		Members:      result["members"].(primitive.A),
+		// Start_time: result["start_time"].(string),
+		Active: result["active"].(bool),
 	}
 
 	c.IndentedJSON(http.StatusOK, one_group)
