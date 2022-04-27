@@ -5,7 +5,7 @@ import { emitter } from '@/utils/bus.js'
 // import router from '@/router/index'
 
 const service = axios.create({
-  baseURL: "/",
+  baseURL: "http://localhost:8080/",
   timeout: 99999
 })
 let acitveAxios = 0

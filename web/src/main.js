@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import store from './store'
+import { store } from '@/pinia'
 import ElementPlus from 'element-plus'
 import en from 'element-plus/es/locale/lang/en'
 import { createPinia } from 'pinia'

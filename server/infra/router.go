@@ -14,6 +14,7 @@ var Router = gin.Default()
 
 func InitRouter() {
 	api.Init()
+	Router.Use(middleware.Cors())
 
 	// login
 	Router.POST("/login", api.LoginHandler)

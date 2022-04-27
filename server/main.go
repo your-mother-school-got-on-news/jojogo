@@ -15,5 +15,5 @@ import (
 func main() {
 	config.Init()
 	infra.InitRouter()
-	infra.Router.Run()
+	infra.Router.Run(":8080")
 }
