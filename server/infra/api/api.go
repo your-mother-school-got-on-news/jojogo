@@ -46,31 +46,30 @@ func GetGroups(c *gin.Context) {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
 	}
+	// c.JSON(http.StatusOK, results)
 
-	// var groups []group
-
-	// bsonBytes, _ := bson.Marshal(results)
-	// bson.Unmarshal(bsonBytes, &groups)
-	// fmt.Println(groups)
-
-	// c.IndentedJSON(http.StatusOK, groups)
-
-	var groups []group
 	for _, result := range results {
 		fmt.Println("result['members'] = ", reflect.TypeOf(result["members"]))
 		fmt.Println("result['total_member'] = ", reflect.TypeOf(result["total_member"]))
 
-		one_group := group{
-			Group_name:   result["group_name"].(string),
-			Total_member: result["total_member"].(int32),
-			Members:      result["members"].(primitive.A),
-			// Start_time: result["start_time"].(string),
-			Active: result["active"].(bool),
+		one_group := struct {
+			Group_name   string
+			Total_member int32
+			Members      primitive.A
+			Start_time   primitive.DateTime
+			Active       bool
+		}{
+			result["group_name"].(string),
+			result["total_member"].(int32),
+			result["members"].(primitive.A),
+			result["start_time"].(primitive.DateTime),
+			result["active"].(bool),
 		}
-		groups = append(groups, one_group)
+		c.JSON(http.StatusOK, one_group)
+		// groups = append(groups, one_group)
 	}
 
-	c.IndentedJSON(http.StatusOK, groups)
+	// c.JSON(http.StatusOK, groups)
 }
 
 func GetGroupByName(c *gin.Context) {
@@ -92,7 +91,7 @@ func GetGroupByName(c *gin.Context) {
 	bsonBytes, _ := bson.Marshal(result)
 	bson.Unmarshal(bsonBytes, &one_group)
 
-	c.IndentedJSON(http.StatusOK, one_group)
+	c.JSON(http.StatusOK, one_group)
 }
 
 type response struct {
@@ -121,7 +120,7 @@ func CreateGroup(c *gin.Context) {
 		Message: "success",
 	}
 
-	c.IndentedJSON(http.StatusOK, insertion_response)
+	c.JSON(http.StatusOK, insertion_response)
 }
 
 func UpdateGroupName(c *gin.Context) {
@@ -150,7 +149,7 @@ func UpdateGroupName(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func AddToGroup(c *gin.Context) {
@@ -179,7 +178,7 @@ func AddToGroup(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func DelFromGroup(c *gin.Context) {
@@ -208,7 +207,7 @@ func DelFromGroup(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func ChangeGroupState(c *gin.Context) {
@@ -246,33 +245,8 @@ func ChangeGroupState(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
-
-// func Register(c *gin.Context) {
-// 	name := c.Param("name")
-// 	passwd := c.Param("password")
-
-// 	h := sha256.New()
-// 	h.Write([]byte(passwd))
-
-// 	coll := db.Client.Database("User").Collection("user")
-// 	doc := bson.D{
-// 		{"name", name},
-// 		{"password", string(h.Sum(nil)[:])},
-// 	}
-// 	result, err := coll.InsertOne(context.TODO(), doc)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	insertion_response := response{
-// 		ID:      result.InsertedID.(primitive.ObjectID).Hex(),
-// 		Message: "success",
-// 	}
-
-// 	c.IndentedJSON(http.StatusOK, insertion_response)
-// }
 
 func Register(c *gin.Context) {
 	var request template.LoginRequest
@@ -282,10 +256,25 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	coll := db.Client.Database("User").Collection("user")
+	var check_exist bson.M // group_name The gay group
+	err := coll.FindOne(context.TODO(), bson.D{{"name", request.UserName}}).Decode(&check_exist)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			// This error means your query did not match any documents.
+			panic(err)
+		}
+	}
+	if len(check_exist) > 0 {
+		c.JSON(http.StatusForbidden, gin.H{
+			"Message": "The given name is used already",
+		})
+		return
+	}
+
 	h := sha256.New()
 	h.Write([]byte(request.Password))
 
-	coll := db.Client.Database("User").Collection("user")
 	doc := bson.D{
 		{"name", request.UserName},
 		{"password", string(h.Sum(nil)[:])},
@@ -300,7 +289,7 @@ func Register(c *gin.Context) {
 		Message: "success",
 	}
 
-	c.IndentedJSON(http.StatusOK, insertion_response)
+	c.JSON(http.StatusOK, insertion_response)
 }
 
 func LoginHandler(c *gin.Context) {
