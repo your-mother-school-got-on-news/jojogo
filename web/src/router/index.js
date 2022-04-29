@@ -6,7 +6,6 @@ const routes = [
     path: '/',
     name: 'home',
     component: HomeView,
-    redirect: '/login'
   },
   {
     path: '/about',

@@ -1,8 +1,8 @@
 import axios from 'axios' // 引入axios
-import { ElMessage } from 'element-plus'
-// import { useUserStore } from '@/pinia/modules/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/pinia/modules/user'
 import { emitter } from '@/utils/bus.js'
-// import router from '@/router/index'
+import router from '@/router/index'
 
 const service = axios.create({
   baseURL: "http://localhost:8080/",
@@ -10,17 +10,17 @@ const service = axios.create({
 })
 let acitveAxios = 0
 let timer
-const showLoading = () => {
-  acitveAxios++
-  if (timer) {
-    clearTimeout(timer)
-  }
-  timer = setTimeout(() => {
-    if (acitveAxios > 0) {
-      emitter.emit('showLoading')
-    }
-  }, 400)
-}
+// const showLoading = () => {
+//   acitveAxios++
+//   if (timer) {
+//     clearTimeout(timer)
+//   }
+//   timer = setTimeout(() => {
+//     if (acitveAxios > 0) {
+//       emitter.emit('showLoading')
+//     }
+//   }, 400)
+// }
 
 const closeLoading = () => {
   acitveAxios--
@@ -32,16 +32,16 @@ const closeLoading = () => {
 // http request 拦截器
 service.interceptors.request.use(
   config => {
-    if (!config.donNotShowLoading) {
-      showLoading()
-    }
-    // const userStore = useUserStore()
-    config.headers = {
-      'Content-Type': 'application/json',
-      // 'x-token': userStore.token,
-      // 'x-user-id': userStore.userInfo.ID,
-      ...config.headers
-    }
+    // if (!config.donNotShowLoading) {
+    //   showLoading()
+    // }
+    // // const userStore = useUserStore()
+    // config.headers = {
+    //   'Content-Type': 'application/json',
+    //   // 'x-token': userStore.token,
+    //   // 'x-user-id': userStore.userInfo.ID,
+    //   ...config.headers
+    // }
     return config
   },
   error => {
@@ -56,66 +56,71 @@ service.interceptors.request.use(
 )
 
 // http response 拦截器
-// service.interceptors.response.use(
-//   response => {
-//     const userStore = useUserStore()
-//     closeLoading()
-//     if (response.headers['new-token']) {
-//       userStore.setToken(response.headers['new-token'])
-//     }
-//     if (response.data.code === 0 || response.headers.success === 'true') {
-//       if (response.headers.msg) {
-//         response.data.msg = decodeURI(response.headers.msg)
-//       }
-//       return response.data
-//     } else {
-//       ElMessage({
-//         showClose: true,
-//         message: response.data.msg || decodeURI(response.headers.msg),
-//         type: 'error'
-//       })
-//       if (response.data.data && response.data.data.reload) {
-//         userStore.token = ''
-//         localStorage.clear()
-//         router.push({ name: 'Login', replace: true })
-//       }
-//       return response.data.msg ? response.data : response
-//     }
-//   },
-//   error => {
-//     closeLoading()
-//     switch (error.response.status) {
-//       case 500:
-//         ElMessageBox.confirm(`
-//         <p>检测到接口错误${error}</p>
-//         <p>错误码<span style="color:red"> 500 </span>：此类错误内容常见于后台panic，请先查看后台日志，如果影响您正常使用可强制登出清理缓存</p>
-//         `, '接口报错', {
-//           dangerouslyUseHTMLString: true,
-//           distinguishCancelAndClose: true,
-//           confirmButtonText: '清理缓存',
-//           cancelButtonText: '取消'
-//         })
-//           .then(() => {
-//             const userStore = useUserStore()
-//             userStore.token = ''
-//             localStorage.clear()
-//             router.push({ name: 'Login', replace: true })
-//           })
-//         break
-//       case 404:
-//         ElMessageBox.confirm(`
-//           <p>检测到接口错误${error}</p>
-//           <p>错误码<span style="color:red"> 404 </span>：此类错误多为接口未注册（或未重启）或者请求路径（方法）与api路径（方法）不符--如果为自动化代码请检查是否存在空格</p>
-//           `, '接口报错', {
-//           dangerouslyUseHTMLString: true,
-//           distinguishCancelAndClose: true,
-//           confirmButtonText: '我知道了',
-//           cancelButtonText: '取消'
-//         })
-//         break
-//     }
+service.interceptors.response.use(
+  response => {
+    // console.log(JSON.stringify(response.data))
+    // console.log(response.status)
+    return response;
+    // console.log(response)
+    // const userStore = useUserStore()
+    // closeLoading()
+    // if (response.headers['new-token']) {
+    //   userStore.setToken(response.headers['new-token'])
+    // }
+    // if (response.data.code === 0 || response.headers.success === 'true') {
+    //   if (response.headers.msg) {
+    //     response.data.msg = decodeURI(response.headers.msg)
+    //   }
+    //   return response.data
+    // } else {
+    //   ElMessage({
+    //     showClose: true,
+    //     message: response.data.msg || decodeURI(response.headers.msg),
+    //     type: 'error'
+    //   })
+    //   if (response.data.data && response.data.data.reload) {
+    //     userStore.token = ''
+    //     localStorage.clear()
+    //     router.push({ name: 'Login', replace: true })
+    //   }
+    //   console.log(response)
+    //   return response.data.msg ? response.data : response
+    // }
+  },
+  error => {
+    closeLoading()
+    switch (error.response.status) {
+      case 500:
+        ElMessageBox.confirm(`
+        <p>${error}</p>
+        <p>錯誤碼<span style="color:red"> 500 </span>：伺服器忙碌中</p>
+        `, '接口報錯', {
+          dangerouslyUseHTMLString: true,
+          distinguishCancelAndClose: true,
+          confirmButtonText: '清理暫存',
+          cancelButtonText: '取消'
+        })
+          .then(() => {
+            const userStore = useUserStore()
+            userStore.token = ''
+            localStorage.clear()
+            router.push({ name: 'Login', replace: true })
+          })
+        break
+      case 404:
+        ElMessageBox.confirm(`
+          <p>${error}</p>
+          <p>錯誤碼<span style="color:red"> 404 </span>：找不到帳號，您可能未註冊。</p>
+          `, '接口報錯', {
+          dangerouslyUseHTMLString: true,
+          distinguishCancelAndClose: true,
+          confirmButtonText: '我知道了',
+          cancelButtonText: '取消'
+        })
+        break
+    }
 
-//     return error
-//   }
-// )
+    return error
+  }
+)
 export default service
