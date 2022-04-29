@@ -16,12 +16,13 @@ func InitRouter() {
 	api.Init()
 
 	// login
+	Router.POST("/register", api.Register)
 	Router.POST("/login", api.LoginHandler)
 	Router.GET("/info", middleware.Auth(), handler.GetUserInfo)
 
 	// group ops
 	Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	Router.GET("/group/view", api.GetGroups)
+	Router.GET("/group/view", middleware.Auth(), api.GetGroups)
 	Router.GET("/group/get/name/:group_name", api.GetGroupByName)
 
 	Router.POST("/group/new/:group_name", api.CreateGroup)

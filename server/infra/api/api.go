@@ -2,13 +2,14 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"jojogo/server/config"
 	"jojogo/server/infra/api/db"
 	"jojogo/server/jwt"
 	"jojogo/server/template"
 	"jojogo/server/utils/log"
-	"jojogo/server/utils/user"
+	_user "jojogo/server/utils/user"
 	"reflect"
 	"strconv"
 	"time"
@@ -34,7 +35,7 @@ type group struct {
 func GetGroups(c *gin.Context) {
 	coll := db.Client.Database("groups").Collection("version1")
 
-	cursor, err := coll.Find(context.TODO(), bson.D{{"total_member", bson.D{{"$lte", 500}}}})
+	cursor, err := coll.Find(context.TODO(), bson.D{}) // {"total_member", bson.D{{"$lte", 500}}}
 	if err != nil {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
@@ -45,21 +46,17 @@ func GetGroups(c *gin.Context) {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
 	}
-	fmt.Println("results = ", reflect.TypeOf(results))
-	fmt.Println("len of results = ", len(results))
-	// fmt.Println("results = ", reflect.TypeOf(results))
-	// groups := []group{}
+
+	// var groups []group
+
+	// bsonBytes, _ := bson.Marshal(results)
+	// bson.Unmarshal(bsonBytes, &groups)
+	// fmt.Println(groups)
+
+	// c.IndentedJSON(http.StatusOK, groups)
+
 	var groups []group
 	for _, result := range results {
-		// fmt.Println("result = ", reflect.TypeOf(result))
-		// output, err := json.MarshalIndent(result, "", "    ")
-		// fmt.Println("output = ", reflect.TypeOf(output))
-		// if err != nil {
-		// 	log.Error("something went wrong", zap.Error(err))
-		// 	panic(err)
-		// }
-		// log.Info(string(output))
-
 		fmt.Println("result['members'] = ", reflect.TypeOf(result["members"]))
 		fmt.Println("result['total_member'] = ", reflect.TypeOf(result["total_member"]))
 
@@ -73,18 +70,7 @@ func GetGroups(c *gin.Context) {
 		groups = append(groups, one_group)
 	}
 
-	// fmt.Println(results)
-
-	// c.IndentedJSON(http.StatusOK, results)
 	c.IndentedJSON(http.StatusOK, groups)
-
-	// one_group := group{
-	// 	Group_name:   result["group_name"].(string),  // result["group_name"],
-	// 	Total_member: result["total_member"].(int32), // result["total_member"],
-	// 	// Members:      result["members"].([]string),   // result["members"],
-	// 	// Start_time: result["start_time"].(string), // result["start_time"],
-	// 	Active: result["active"].(bool), // result["active"],
-	// }
 }
 
 func GetGroupByName(c *gin.Context) {
@@ -101,15 +87,10 @@ func GetGroupByName(c *gin.Context) {
 		}
 	}
 
-	log.Info("result", zap.Any("result", result))
+	var one_group group
 
-	one_group := group{
-		Group_name:   result["group_name"].(string),
-		Total_member: result["total_member"].(int32),
-		Members:      result["members"].(primitive.A),
-		// Start_time: result["start_time"].(string),
-		Active: result["active"].(bool),
-	}
+	bsonBytes, _ := bson.Marshal(result)
+	bson.Unmarshal(bsonBytes, &one_group)
 
 	c.IndentedJSON(http.StatusOK, one_group)
 }
@@ -268,6 +249,60 @@ func ChangeGroupState(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, res)
 }
 
+// func Register(c *gin.Context) {
+// 	name := c.Param("name")
+// 	passwd := c.Param("password")
+
+// 	h := sha256.New()
+// 	h.Write([]byte(passwd))
+
+// 	coll := db.Client.Database("User").Collection("user")
+// 	doc := bson.D{
+// 		{"name", name},
+// 		{"password", string(h.Sum(nil)[:])},
+// 	}
+// 	result, err := coll.InsertOne(context.TODO(), doc)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	insertion_response := response{
+// 		ID:      result.InsertedID.(primitive.ObjectID).Hex(),
+// 		Message: "success",
+// 	}
+
+// 	c.IndentedJSON(http.StatusOK, insertion_response)
+// }
+
+func Register(c *gin.Context) {
+	var request template.LoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Error("Bad Request, ", zap.String("error", "incorrect parameters"))
+		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
+		return
+	}
+
+	h := sha256.New()
+	h.Write([]byte(request.Password))
+
+	coll := db.Client.Database("User").Collection("user")
+	doc := bson.D{
+		{"name", request.UserName},
+		{"password", string(h.Sum(nil)[:])},
+	}
+	result, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		panic(err)
+	}
+
+	insertion_response := response{
+		ID:      result.InsertedID.(primitive.ObjectID).Hex(),
+		Message: "success",
+	}
+
+	c.IndentedJSON(http.StatusOK, insertion_response)
+}
+
 func LoginHandler(c *gin.Context) {
 	var request template.LoginRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -275,7 +310,7 @@ func LoginHandler(c *gin.Context) {
 		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
 		return
 	}
-	user, err := user.FindUserByUsername(request.UserName)
+	user, err := _user.FindUserByUsername(request.UserName)
 
 	if err != nil {
 		log.Error("Status Not Found, ", zap.String("error", fmt.Sprintf("user %s not found", request.UserName)))
@@ -283,7 +318,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	if user.Password != request.Password {
+	if !_user.Verify(request.Password, user.Password) {
 		log.Error("Incorrect Password")
 		template.UnauthorityError(c, template.ErrUnauthorizedCode, "Incorrect Password")
 		return
