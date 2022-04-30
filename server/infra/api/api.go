@@ -2,14 +2,15 @@ package api
 
 import (
 	"context"
-	"encoding/json"
+	"crypto/sha256"
 	"fmt"
 	"jojogo/server/config"
 	"jojogo/server/infra/api/db"
 	"jojogo/server/jwt"
 	"jojogo/server/template"
 	"jojogo/server/utils/log"
-	"jojogo/server/utils/user"
+	_user "jojogo/server/utils/user"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -24,9 +25,9 @@ import (
 )
 
 type group struct {
-	Group_name   string `json:"group_name"`
-	Total_member int32  `json:"total_member"`
-	// Members      []string `json:"members"`
+	Group_name   string      `json:"group_name"`
+	Total_member int32       `json:"total_member"`
+	Members      primitive.A `json:"members"`
 	// Start_time string `json:"start_time"`
 	Active bool `json:"active"`
 }
@@ -34,7 +35,7 @@ type group struct {
 func GetGroups(c *gin.Context) {
 	coll := db.Client.Database("groups").Collection("version1")
 
-	cursor, err := coll.Find(context.TODO(), bson.D{{"total_member", bson.D{{"$lte", 500}}}})
+	cursor, err := coll.Find(context.TODO(), bson.D{}) // {"total_member", bson.D{{"$lte", 500}}}
 	if err != nil {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
@@ -45,14 +46,30 @@ func GetGroups(c *gin.Context) {
 		log.Error("something went wrong", zap.Error(err))
 		panic(err)
 	}
+	// c.JSON(http.StatusOK, results)
+
 	for _, result := range results {
-		output, err := json.MarshalIndent(result, "", "    ")
-		if err != nil {
-			log.Error("something went wrong", zap.Error(err))
-			panic(err)
+		fmt.Println("result['members'] = ", reflect.TypeOf(result["members"]))
+		fmt.Println("result['total_member'] = ", reflect.TypeOf(result["total_member"]))
+
+		one_group := struct {
+			Group_name   string
+			Total_member int32
+			Members      primitive.A
+			Start_time   primitive.DateTime
+			Active       bool
+		}{
+			result["group_name"].(string),
+			result["total_member"].(int32),
+			result["members"].(primitive.A),
+			result["start_time"].(primitive.DateTime),
+			result["active"].(bool),
 		}
-		log.Info(string(output))
+		c.JSON(http.StatusOK, one_group)
+		// groups = append(groups, one_group)
 	}
+
+	// c.JSON(http.StatusOK, groups)
 }
 
 func GetGroupByName(c *gin.Context) {
@@ -69,17 +86,12 @@ func GetGroupByName(c *gin.Context) {
 		}
 	}
 
-	log.Info("result", zap.Any("result", result))
+	var one_group group
 
-	one_group := group{
-		Group_name:   result["group_name"].(string),  // result["group_name"],
-		Total_member: result["total_member"].(int32), // result["total_member"],
-		// Members:      result["members"].([]string),   // result["members"],
-		// Start_time: result["start_time"].(string), // result["start_time"],
-		Active: result["active"].(bool), // result["active"],
-	}
+	bsonBytes, _ := bson.Marshal(result)
+	bson.Unmarshal(bsonBytes, &one_group)
 
-	c.IndentedJSON(http.StatusOK, one_group)
+	c.JSON(http.StatusOK, one_group)
 }
 
 type response struct {
@@ -108,7 +120,7 @@ func CreateGroup(c *gin.Context) {
 		Message: "success",
 	}
 
-	c.IndentedJSON(http.StatusOK, insertion_response)
+	c.JSON(http.StatusOK, insertion_response)
 }
 
 func UpdateGroupName(c *gin.Context) {
@@ -137,7 +149,7 @@ func UpdateGroupName(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func AddToGroup(c *gin.Context) {
@@ -166,7 +178,7 @@ func AddToGroup(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func DelFromGroup(c *gin.Context) {
@@ -195,7 +207,7 @@ func DelFromGroup(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", result.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
 }
 
 func ChangeGroupState(c *gin.Context) {
@@ -233,7 +245,51 @@ func ChangeGroupState(c *gin.Context) {
 
 	fmt.Printf("Number of documents replaced or modified: %d", results.ModifiedCount)
 
-	c.IndentedJSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res)
+}
+
+func Register(c *gin.Context) {
+	var request template.LoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Error("Bad Request, ", zap.String("error", "incorrect parameters"))
+		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
+		return
+	}
+
+	coll := db.Client.Database("User").Collection("user")
+	var check_exist bson.M // group_name The gay group
+	err := coll.FindOne(context.TODO(), bson.D{{"name", request.UserName}}).Decode(&check_exist)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			// This error means your query did not match any documents.
+			panic(err)
+		}
+	}
+	if len(check_exist) > 0 {
+		c.JSON(http.StatusForbidden, gin.H{
+			"Message": "The given name is used already",
+		})
+		return
+	}
+
+	h := sha256.New()
+	h.Write([]byte(request.Password))
+
+	doc := bson.D{
+		{"name", request.UserName},
+		{"password", string(h.Sum(nil)[:])},
+	}
+	result, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		panic(err)
+	}
+
+	insertion_response := response{
+		ID:      result.InsertedID.(primitive.ObjectID).Hex(),
+		Message: "success",
+	}
+
+	c.JSON(http.StatusOK, insertion_response)
 }
 
 func LoginHandler(c *gin.Context) {
@@ -243,7 +299,7 @@ func LoginHandler(c *gin.Context) {
 		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
 		return
 	}
-	user, err := user.FindUserByUsername(request.UserName)
+	user, err := _user.FindUserByUsername(request.UserName)
 
 	if err != nil {
 		log.Error("Status Not Found, ", zap.String("error", fmt.Sprintf("user %s not found", request.UserName)))
@@ -251,7 +307,7 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 
-	if user.Password != request.Password {
+	if !_user.Verify(request.Password, user.Password) {
 		log.Error("Incorrect Password")
 		template.UnauthorityError(c, template.ErrUnauthorizedCode, "Incorrect Password")
 		return
