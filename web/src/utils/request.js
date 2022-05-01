@@ -118,6 +118,17 @@ service.interceptors.response.use(
           cancelButtonText: '取消'
         })
         break
+      case 401:
+          ElMessageBox.confirm(`
+            <p>${error}</p>
+            <p>錯誤碼<span style="color:red"> 401 </span>：登入失敗，請檢查帳號密碼是否正確。</p>
+            `, '接口報錯', {
+            dangerouslyUseHTMLString: true,
+            distinguishCancelAndClose: true,
+            confirmButtonText: '我知道了',
+            cancelButtonText: '取消'
+          })
+          break
     }
 
     return error
