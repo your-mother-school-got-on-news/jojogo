@@ -1,4 +1,4 @@
-import { login} from '@/api/user'
+import { login, register} from '@/api/user'
 import { defineStore } from 'pinia'
 import { ref} from 'vue'
 import router from '@/router/index'
@@ -43,9 +43,14 @@ export const useUserStore = defineStore('user', () => {
       }
     }
 
+    const Register = async(registerInfo) => {
+      const res = await register(registerInfo)
+      console.log(res.status)
+    }
   
     return {
       token,
-      LoginIn
+      LoginIn,
+      Register
     }
 })
