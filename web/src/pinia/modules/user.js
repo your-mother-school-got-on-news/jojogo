@@ -46,6 +46,10 @@ export const useUserStore = defineStore('user', () => {
     const Register = async(registerInfo) => {
       const res = await register(registerInfo)
       console.log(res.status)
+      if (res.status === 200) {
+      router.push({ name: 'login' })
+        return true
+      }
     }
   
     return {

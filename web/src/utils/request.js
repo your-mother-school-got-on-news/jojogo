@@ -107,6 +107,17 @@ service.interceptors.response.use(
             router.push({ name: 'Login', replace: true })
           })
         break
+      case 403:
+          ElMessageBox.confirm(`
+            <p>${error}</p>
+            <p>錯誤碼<span style="color:red"> 403 </span>：帳號已存在，請再試一次。</p>
+            `, '接口報錯', {
+            dangerouslyUseHTMLString: true,
+            distinguishCancelAndClose: true,
+            confirmButtonText: '我知道了',
+            cancelButtonText: '取消'
+          })
+          break
       case 404:
         ElMessageBox.confirm(`
           <p>${error}</p>
