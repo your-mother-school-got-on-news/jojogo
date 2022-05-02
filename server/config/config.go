@@ -15,6 +15,7 @@ var Val Config
 type Config struct {
 	JWTTokenLife int    `mapstructure:"JWT_TOKEN_LIFE"`
 	JWTSecret    string `mapstructure:"JWT_SECRET"`
+	Port         string `mapstructure:"PORT"`
 }
 
 // Init Init
