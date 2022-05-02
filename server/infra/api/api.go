@@ -25,11 +25,11 @@ import (
 )
 
 type group struct {
-	Group_name   string      `json:"group_name"`
-	Total_member int32       `json:"total_member"`
-	Members      primitive.A `json:"members"`
-	// Start_time string `json:"start_time"`
-	Active bool `json:"active"`
+	Group_name   string             `json:"group_name"`
+	Total_member int32              `json:"total_member"`
+	Members      primitive.A        `json:"members"`
+	Start_time   primitive.DateTime `json:"start_time"`
+	Active       bool               `json:"active"`
 }
 
 func GetGroups(c *gin.Context) {
@@ -48,28 +48,36 @@ func GetGroups(c *gin.Context) {
 	}
 	// c.JSON(http.StatusOK, results)
 
+	var groups []group
 	for _, result := range results {
 		fmt.Println("result['members'] = ", reflect.TypeOf(result["members"]))
 		fmt.Println("result['total_member'] = ", reflect.TypeOf(result["total_member"]))
 
-		one_group := struct {
-			Group_name   string
-			Total_member int32
-			Members      primitive.A
-			Start_time   primitive.DateTime
-			Active       bool
-		}{
+		// one_group := struct {
+		// 	Group_name   string
+		// 	Total_member int32
+		// 	Members      primitive.A
+		// 	Start_time   primitive.DateTime
+		// 	Active       bool
+		// }{
+		// 	result["group_name"].(string),
+		// 	result["total_member"].(int32),
+		// 	result["members"].(primitive.A),
+		// 	result["start_time"].(primitive.DateTime),
+		// 	result["active"].(bool),
+		// }
+		// c.JSON(http.StatusOK, one_group)
+		one_group := group{
 			result["group_name"].(string),
 			result["total_member"].(int32),
 			result["members"].(primitive.A),
 			result["start_time"].(primitive.DateTime),
 			result["active"].(bool),
 		}
-		c.JSON(http.StatusOK, one_group)
-		// groups = append(groups, one_group)
+		groups = append(groups, one_group)
 	}
 
-	// c.JSON(http.StatusOK, groups)
+	c.JSON(http.StatusOK, groups)
 }
 
 func GetGroupByName(c *gin.Context) {
