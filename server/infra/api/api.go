@@ -274,6 +274,7 @@ func Register(c *gin.Context) {
 		}
 	}
 	if len(check_exist) > 0 {
+		log.Error("StatusForbidden, ", zap.String("error", "The given name is used already"))
 		c.JSON(http.StatusForbidden, gin.H{
 			"Message": "The given name is used already",
 		})
