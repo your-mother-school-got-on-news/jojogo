@@ -1,1 +1,0 @@
-* open home.html in browser
