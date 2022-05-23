@@ -8,5 +8,5 @@ import (
 func main() {
 	config.Init()
 	infra.InitRouter()
-	infra.Router.Run(config.Val.Port)
+	infra.Router.Run("0.0.0.0" + config.Val.Port)
 }
