@@ -4,7 +4,6 @@ import service from '@/utils/request'
 // @Param data body {username:"string",password:"string"}
 // @Router /base/login [post]
 export const login = (data) => {
-  console.log(data)
   return service({
     url: '/login',
     method: 'post',
@@ -18,7 +17,6 @@ export const login = (data) => {
 // @Param data body {username:"string",password:"string"}
 // @Router /base/register [post]
 export const register = (data) => {
-  console.log(data)
   return service({
     url: '/register',
     method: 'post',
