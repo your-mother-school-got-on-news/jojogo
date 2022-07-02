@@ -1,6 +1,9 @@
 import { createStore } from 'vuex'
-
+import createPersistedState from "vuex-persistedstate";
 export default createStore({
+  plugins: [createPersistedState({
+    storage: sessionStorage,
+  })],
   strict: true, // process.env.NODE_ENV !== 'production',
   state: {
     isSidebarMinimized: false,
