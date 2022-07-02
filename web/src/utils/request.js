@@ -18,6 +18,7 @@ service.interceptors.request.use(
 // http response 拦截器
 service.interceptors.response.use(
   response => {
-    return response;
+
+    return {data: response.data, status: response.status};
   })
 export default service

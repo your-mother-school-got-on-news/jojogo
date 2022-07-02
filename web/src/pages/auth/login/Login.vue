@@ -63,9 +63,9 @@ export default {
       const log = async() => {
         const res = await login(loginFormData)
         if (res.status === 200) {
-          const user = JSON.parse(res.config.data);
-          sessionStorage.setItem("user", user["username"]);          
-          this.$store.commit('changeUserName',user["username"])
+          const user = JSON.parse(JSON.stringify(res.data));
+          sessionStorage.setItem("user", this.username);          
+          this.$store.commit('changeUserName',this.username)
           this.$router.push({ name: 'dashboard' })
           return true
         }
