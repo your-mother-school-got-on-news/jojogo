@@ -44,6 +44,8 @@
 </template>
 
 <script>
+import { login, register} from '@/api/user'
+import { reactive, ref } from 'vue'
 export default {
   name: 'signup',
   data () {
@@ -64,7 +66,18 @@ export default {
       if (!this.formReady) {
         return
       }
-      this.$router.push({ name: 'dashboard' })
+      const registerFormData = reactive({
+            email: this.email,
+            password: this.password,
+      })
+      const reg = async() => {
+        console.log(registerFormData)
+        return await register(registerFormData)
+      }
+      const submitForm = () => {
+        const flag =  reg()
+      }
+      submitForm()
     },
   },
   computed: {
