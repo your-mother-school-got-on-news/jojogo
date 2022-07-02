@@ -263,7 +263,7 @@ func Register(c *gin.Context) {
 		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
 		return
 	}
-
+	log.Info("Register: ", zap.Any("%v", request))
 	coll := db.Client.Database("User").Collection("user")
 	var check_exist bson.M // group_name The gay group
 	err := coll.FindOne(context.TODO(), bson.D{{"name", request.UserName}}).Decode(&check_exist)

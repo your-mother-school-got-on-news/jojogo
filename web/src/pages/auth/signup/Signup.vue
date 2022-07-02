@@ -2,7 +2,7 @@
   <form @submit.prevent="onsubmit()">
     <va-input
       class="mb-3"
-      v-model="email"
+      v-model="username"
       type="email"
       :label="$t('auth.email')"
       :error="!!emailErrors.length"
@@ -46,11 +46,13 @@
 <script>
 import { login, register} from '@/api/user'
 import { reactive, ref } from 'vue'
+import router from '@/router/index'
+
 export default {
   name: 'signup',
   data () {
     return {
-      email: '',
+      username: '',
       password: '',
       agreedToTerms: false,
       emailErrors: [],
@@ -60,19 +62,23 @@ export default {
   },
   methods: {
     onsubmit () {
-      this.emailErrors = this.email ? [] : ['Email is required']
+      this.emailErrors = this.username ? [] : ['Email is required']
       this.passwordErrors = this.password ? [] : ['Password is required']
       this.agreedToTermsErrors = this.agreedToTerms ? [] : ['You must agree to the terms of use to continue']
       if (!this.formReady) {
         return
       }
       const registerFormData = reactive({
-            email: this.email,
+            username: this.username,
             password: this.password,
       })
       const reg = async() => {
         console.log(registerFormData)
-        return await register(registerFormData)
+        const res = await register(registerFormData)
+        if (res.status === 200) {
+          router.push({ name: 'login' })
+          return true
+        }
       }
       const submitForm = () => {
         const flag =  reg()
