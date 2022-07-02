@@ -2,7 +2,7 @@
   <form @submit.prevent="onsubmit">
     <va-input
       class="mb-3"
-      v-model="email"
+      v-model="username"
       type="email"
       :label="$t('auth.email')"
       :error="!!emailErrors.length"
@@ -30,11 +30,14 @@
 </template>
 
 <script>
+import { login } from '@/api/user'
+import { reactive } from 'vue'
+
 export default {
   name: 'login',
   data () {
     return {
-      email: '',
+      username: '',
       password: '',
       keepLoggedIn: false,
       emailErrors: [],
@@ -48,12 +51,27 @@ export default {
   },
   methods: {
     onsubmit () {
-      this.emailErrors = this.email ? [] : ['Email is required']
+      this.emailErrors = this.username ? [] : ['Email is required']
       this.passwordErrors = this.password ? [] : ['Password is required']
       if (!this.formReady) {
         return
       }
-      this.$router.push({ name: 'dashboard' })
+      const loginFormData = reactive({
+            username: this.username,
+            password: this.password,
+      })
+      const log = async() => {
+        console.log(loginFormData)
+        const res = await login(loginFormData)
+        if (res.status === 200) {
+          this.$router.push({ name: 'dashboard' })
+          return true
+        }
+      }
+      const submitForm = () => {
+        const flag =  log()
+      }
+      submitForm()
     },
   },
 }

@@ -44,9 +44,8 @@
 </template>
 
 <script>
-import { login, register} from '@/api/user'
-import { reactive, ref } from 'vue'
-import router from '@/router/index'
+import { register } from '@/api/user'
+import { reactive } from 'vue'
 
 export default {
   name: 'signup',
@@ -76,7 +75,7 @@ export default {
         console.log(registerFormData)
         const res = await register(registerFormData)
         if (res.status === 200) {
-          router.push({ name: 'login' })
+          this.$router.push({ name: 'login' })
           return true
         }
       }

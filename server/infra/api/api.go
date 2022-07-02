@@ -308,6 +308,8 @@ func LoginHandler(c *gin.Context) {
 		template.BadRequest(c, template.ErrParamsCode, "incorrect parameters")
 		return
 	}
+	log.Info("Login: ", zap.Any("%v", request))
+
 	user, err := _user.FindUserByUsername(request.UserName)
 
 	if err != nil {
